@@ -5,37 +5,44 @@ import CenterModal from "./CenterModal";
 export default function OAReminderManager({ internships, enabled }) {
   const [queue, setQueue] = useState([]);
   const [index, setIndex] = useState(0);
+  const SHOWN_KEY = "oaRemindersShown";
 
   // don't run until interview reminders are done
-  useEffect(() => {
-    if (!enabled) return;
-    if (!Array.isArray(internships) || internships.length === 0) return;
+ useEffect(() => {
+  if (!enabled) return;
+  if (!Array.isArray(internships) || internships.length === 0) return;
 
-    const today = dayjs().startOf("day");
-    const reminders = [];
+  // 🔒 STOP if already shown
+  if (sessionStorage.getItem(SHOWN_KEY)) return;
 
-    internships.forEach((i) => {
-      const oaTs = i.timeline?.oaDateTime;
-      if (!oaTs) return;
+  const today = dayjs().startOf("day");
+  const reminders = [];
 
-      const oaDate = oaTs.toDate ? dayjs(oaTs.toDate()) : dayjs(oaTs);
+  internships.forEach((i) => {
+    const oaTs = i.timeline?.oaDateTime;
+    if (!oaTs) return;
 
-      const daysLeft = oaDate.startOf("day").diff(today, "day");
+    const oaDate = oaTs.toDate ? dayjs(oaTs.toDate()) : dayjs(oaTs);
+    const daysLeft = oaDate.startOf("day").diff(today, "day");
 
-      if (daysLeft === 0 || daysLeft === 1) {
-        reminders.push({
-          id: `${i.id}-oa`,
-          title: i.title,
-          daysLeft,
-        });
-      }
-    });
-
-    if (reminders.length > 0) {
-      setQueue(reminders);
-      setIndex(0);
+    if (daysLeft === 0 || daysLeft === 1) {
+      reminders.push({
+        id: `${i.id}-oa`,
+        title: i.title,
+        daysLeft,
+      });
     }
-  }, [enabled, internships]);
+  });
+
+  if (reminders.length > 0) {
+    setQueue(reminders);
+    setIndex(0);
+
+    // 🔐 LOCK IT
+    sessionStorage.setItem(SHOWN_KEY, "true");
+  }
+}, [enabled, internships]);
+
 
   const handleNext = () => {
     setIndex((prev) => {

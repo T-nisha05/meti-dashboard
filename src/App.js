@@ -63,8 +63,7 @@ function App() {
   const [interviewReminders, setInterviewReminders] = useState([]);
   const [oaReminders, setOAReminders] = useState([]);
 
-  // 🔐 THIS IS THE FIX (persists across re-renders)
-  const reminderShownRef = useRef(false);
+  // const reminderShownRef = useRef(false);
 
   const calculateDaysLeft = (date) => {
     if (!date) return null;
@@ -142,21 +141,41 @@ function App() {
       setInterviewReminders(interviewRems);
       setOAReminders(oaRems);
 
-      if (!reminderShownRef.current) {
-        reminderShownRef.current = true;
-        setShouldShowReminders(true);
-      }
+      // if (!reminderShownRef.current) {
+      //   reminderShownRef.current = true;
+      //   setShouldShowReminders(true);
+      // }
     });
 
     return () => unsub();
   }, [user]);
+
+  useEffect(() => {
+  if (!user) return;
+
+  const shown = sessionStorage.getItem("remindersShown");
+
+  if (!shown) {
+    setShouldShowReminders(true);
+    sessionStorage.setItem("remindersShown", "true");
+  }
+}, [user]);
+
+useEffect(() => {
+  if (!user) {
+    sessionStorage.removeItem("interviewRemindersShown");
+    sessionStorage.removeItem("oaRemindersShown");
+    sessionStorage.removeItem("remindersShown");
+  }
+}, [user]);
+
 
   // ⏱ auto-hide after first show
   // useEffect(() => {
   //   if (shouldShowReminders) {
   //     const timer = setTimeout(() => {
   //       setShouldShowReminders(false);
-  //     }, 4000);
+  //     }, 10000);
 
   //     return () => clearTimeout(timer);
   //   }

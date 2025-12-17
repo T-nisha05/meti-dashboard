@@ -5,49 +5,48 @@ import CenterModal from "./CenterModal";
 export default function InterviewReminderModal({ internships, onDone }) {
   const [queue, setQueue] = useState([]);
   const [index, setIndex] = useState(0);
+  const SHOWN_KEY = "interviewRemindersShown";
 
-  // 🔒 prevents running twice on same refresh
+  // prevents running twice on same refresh
   const initialized = useRef(false);
 
-  useEffect(() => {
-    if (!Array.isArray(internships) || internships.length === 0) return;
+ useEffect(() => {
+  if (!Array.isArray(internships) || internships.length === 0) return;
 
-    const today = dayjs().startOf("day");
+  // 🔒 STOP if already shown in this session
+  if (sessionStorage.getItem(SHOWN_KEY)) return;
 
-    const reminders = [];
+  const today = dayjs().startOf("day");
+  const reminders = [];
 
-    internships.forEach((i) => {
-      const today = dayjs().startOf("day");
+  internships.forEach((i) => {
+    const interviewTs = i.timeline?.interviewDate;
+    if (!interviewTs) return;
 
-      // ===== INTERVIEW REMINDER =====
-      const interviewTs = i.timeline?.interviewDate;
-      if (interviewTs) {
-        const interviewDate = interviewTs.toDate
-          ? dayjs(interviewTs.toDate())
-          : dayjs(interviewTs);
+    const interviewDate = interviewTs.toDate
+      ? dayjs(interviewTs.toDate())
+      : dayjs(interviewTs);
 
-        const daysLeft = interviewDate.startOf("day").diff(today, "day");
+    const daysLeft = interviewDate.startOf("day").diff(today, "day");
 
-        if (daysLeft === 0 || daysLeft === 1) {
-          reminders.push({
-            id: `${i.id}-interview`,
-            type: "INTERVIEW",
-            title: i.title,
-            daysLeft,
-          });
-        }
-      }
-    });
-
-    setQueue(reminders);
-
-    console.log("FINAL REMINDER QUEUE:", reminders);
-
-    if (reminders.length > 0) {
-      setQueue(reminders);
-      setIndex(0);
+    if (daysLeft === 0 || daysLeft === 1) {
+      reminders.push({
+        id: `${i.id}-interview`,
+        title: i.title,
+        daysLeft,
+      });
     }
-  }, [internships]);
+  });
+
+  if (reminders.length > 0) {
+    setQueue(reminders);
+    setIndex(0);
+
+    // 🔐 LOCK IT
+    sessionStorage.setItem(SHOWN_KEY, "true");
+  }
+}, [internships]);
+
 
   const handleNext = () => {
     setIndex((prev) => {
