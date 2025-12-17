@@ -1,0 +1,76 @@
+/* Layout */
+.dashboard-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 230px;
+  background: white;
+  padding: 20px;
+  border-right: 1px solid #eee;
+}
+
+.brand {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.sidebar .nav-item {
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.sidebar .nav-item.active,
+.sidebar .nav-item:hover {
+  background: #eef4ff;
+  color: #0d6efd;
+}
+
+/* Main */
+.main-content {
+  flex: 1;
+  padding: 20px 30px;
+}
+
+/* Topbar */
+.topbar {
+  background: #f8fafc;
+  padding: 15px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Controls */
+.control-card {
+  padding: 15px;
+  border-radius: 12px;
+  border: none;
+}
+
+/* Stat Cards */
+.stat-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+
+.stat-card .icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}

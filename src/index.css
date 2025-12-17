@@ -1,3 +1,91 @@
+:root{
+  --glass-bg: rgba(255,255,255,0.72);
+  --glass-border: rgba(0,0,0,0.06);
+  --card-radius: 12px;
+}
+
+/* page background */
+body {
+  background: linear-gradient(180deg,#f7fbff 0%, #ffffff 100%);
+}
+
+/* glass card look */
+.glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--card-radius);
+  box-shadow: 0 8px 30px rgba(20,29,63,0.06);
+}
+
+/* sidebar */
+.sidebar {
+  min-height: 100vh;
+  background: linear-gradient(180deg,#ffffff, #f6f9ff);
+  border-right: 1px solid var(--glass-border);
+  padding-top: 1.5rem;
+}
+
+/* ===== Fancy Primary Button ===== */
+.fancy-add-btn {
+  padding: 12px 22px;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  color: white;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, 0.35);
+  transition: all 0.25s ease;
+}
+
+.fancy-add-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 15px 35px rgba(79, 70, 229, 0.5);
+}
+
+.fancy-add-btn:active {
+  transform: scale(0.97);
+}
+.resume-btn {
+  border: none;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #3b82f6);
+  color: #fff;
+  box-shadow: 0 10px 25px rgba(59, 130, 246, 0.35);
+  transition: all 0.25s ease;
+}
+
+.resume-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(59, 130, 246, 0.45);
+}
+
+.btn-outline-pink {
+  color: #d63384;
+  border-color: #d63384;
+}
+
+.btn-outline-pink:hover {
+  background-color: #d63384;
+  color: white;
+}
+
+/* widget icon circle */
+.icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color: white;
+}
+
+/* small responsive spacing */
+@media (max-width: 991px) {
+  .sidebar { display:none; }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -10,4 +98,135 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.top-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  border-radius: 12px;
+  padding: 14px 20px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  padding: 32px 24px;
+  background: #ffffff;
+  border-right: 1px solid #eee;
+}
+
+/* Brand */
+.sidebar-brand {
+  margin-bottom: 32px;
+}
+
+.brand-logo {
+  width: 140px;
+  margin-bottom: 20px;
+}
+
+.brand-name {
+  font-size: 1.2rem;
+  font-style: italic;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.brand-tagline {
+  font-size: 1rem;
+  font-style: italic;
+  color: #5d80a0;
+}
+
+/* Divider */
+.sidebar-divider {
+  border: none;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(0, 0, 0, 0.234),
+    transparent
+  );
+  margin: 30px 0;
+}
+
+/* Profile Card */
+.profile-button {
+  width: 100%;
+  border: none;
+  background: rgba(0, 0, 0, 0.04);
+  padding: 22px 20px;
+  border-radius: 18px;
+  text-align: left;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  overflow: hidden; /* 🔥 final safety net */
+}
+
+
+.profile-button:hover {
+  background: rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.avatar {
+  font-size: 40px;
+  flex-shrink: 0;
+}
+
+/* Profile text */
+.profile-info strong {
+  font-size: 1rem;
+}
+
+.profile-info small {
+  display: block;
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+.logout-text {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #dc3545;
+  margin-top: 6px;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0; /* 🔥 critical for flex overflow fix */
+}
+
+.profile-info strong,
+.profile-info small {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+body {
+  overflow: visible !important;
+}
+
+.modal,
+.Toastify {
+  z-index: 9999;
 }
