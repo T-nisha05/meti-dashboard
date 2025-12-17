@@ -1,5 +1,4 @@
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -26,17 +25,17 @@ function AppLayout({
   internships,
   interviewDone,
   setInterviewDone,
+  shouldShowReminders,
   children,
 }) {
   const location = useLocation();
-
   const isDashboard = location.pathname === "/dashboard";
 
   return (
     <>
       {isDashboard && <TopNavbar reminders={reminders} />}
 
-      {isDashboard && internships.length > 0 && (
+      {isDashboard && shouldShowReminders && internships.length > 0 && (
         <>
           <InterviewReminderModal
             internships={internships}
@@ -55,6 +54,7 @@ function AppLayout({
 }
 
 function App() {
+  const [shouldShowReminders, setShouldShowReminders] = useState(false);
   const [user, setUser] = useState(null);
   const [internships, setInternships] = useState([]);
   const [initializing, setInitializing] = useState(true);
@@ -62,6 +62,9 @@ function App() {
 
   const [interviewReminders, setInterviewReminders] = useState([]);
   const [oaReminders, setOAReminders] = useState([]);
+
+  // 🔐 THIS IS THE FIX (persists across re-renders)
+  const reminderShownRef = useRef(false);
 
   const calculateDaysLeft = (date) => {
     if (!date) return null;
@@ -93,6 +96,7 @@ function App() {
         id: d.id,
         ...d.data(),
       }));
+
       setInternships(internshipsData);
 
       const interviewRems = internshipsData.map((i) => {
@@ -124,29 +128,39 @@ function App() {
           type: "OA",
           title: i.company || i.title,
           date: oaDT
-            ? dayjs(
-                oaDT.toDate ? oaDT.toDate() : oaDT
-              ).format("DD MMM YYYY")
+            ? dayjs(oaDT.toDate ? oaDT.toDate() : oaDT).format("DD MMM YYYY")
             : null,
           time: oaDT
-            ? dayjs(
-                oaDT.toDate ? oaDT.toDate() : oaDT
-              ).format("hh:mm A")
+            ? dayjs(oaDT.toDate ? oaDT.toDate() : oaDT).format("hh:mm A")
             : null,
           daysLeft: oaDT
-            ? calculateDaysLeft(
-                oaDT.toDate ? oaDT.toDate() : oaDT
-              )
+            ? calculateDaysLeft(oaDT.toDate ? oaDT.toDate() : oaDT)
             : null,
         };
       });
 
       setInterviewReminders(interviewRems);
       setOAReminders(oaRems);
+
+      if (!reminderShownRef.current) {
+        reminderShownRef.current = true;
+        setShouldShowReminders(true);
+      }
     });
 
     return () => unsub();
   }, [user]);
+
+  // ⏱ auto-hide after first show
+  // useEffect(() => {
+  //   if (shouldShowReminders) {
+  //     const timer = setTimeout(() => {
+  //       setShouldShowReminders(false);
+  //     }, 4000);
+
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [shouldShowReminders]);
 
   if (initializing) return <div>Loading...</div>;
 
@@ -157,6 +171,7 @@ function App() {
         internships={internships}
         interviewDone={interviewDone}
         setInterviewDone={setInterviewDone}
+        shouldShowReminders={shouldShowReminders}
       >
         <Routes>
           <Route
@@ -182,4 +197,3 @@ function App() {
 }
 
 export default App;
-

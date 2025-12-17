@@ -20,6 +20,8 @@ import {
 import { Bar } from "react-chartjs-2";
 import dayjs from "dayjs";
 import supabase from "../supabaseClient";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import {
   Chart as ChartJS,
@@ -100,7 +102,6 @@ export default function Dashboard({ user }) {
   const [reminderQueue, setReminderQueue] = useState([]);
   const [activeReminder, setActiveReminder] = useState(null);
 
-
   const [resumePreview, setResumePreview] = useState(null);
   const navigate = useNavigate();
 
@@ -122,90 +123,88 @@ export default function Dashboard({ user }) {
     return () => unsub();
   }, [user?.email]);
 
-// useEffect(() => {
-//   if (!internships.length) return;
+  // useEffect(() => {
+  //   if (!internships.length) return;
 
-//   const today = dayjs().startOf("day");
+  //   const today = dayjs().startOf("day");
 
-//   internships.forEach(async (i) => {
-//     if (!i.interviewDate || i.reminderSent) return;
+  //   internships.forEach(async (i) => {
+  //     if (!i.interviewDate || i.reminderSent) return;
 
-//     const interviewDate = i.interviewDate.toDate
-//       ? dayjs(i.interviewDate.toDate()).startOf("day")
-//       : dayjs(new Date(i.interviewDate)).startOf("day");
+  //     const interviewDate = i.interviewDate.toDate
+  //       ? dayjs(i.interviewDate.toDate()).startOf("day")
+  //       : dayjs(new Date(i.interviewDate)).startOf("day");
 
-//     const daysLeft = interviewDate.diff(today, "day");
+  //     const daysLeft = interviewDate.diff(today, "day");
 
-//     if (daysLeft <= 1 && daysLeft >= 0) {
-//       toast.warn(
-//         `⏰ Interview reminder: "${i.title}" ${
-//           daysLeft === 0 ? "is today!" : "is tomorrow"
-//         }`,
-//         {
-//           onClick: () => navigate(`/internship/${i.id}`),
-//         }
-//       );
+  //     if (daysLeft <= 1 && daysLeft >= 0) {
+  //       toast.warn(
+  //         `⏰ Interview reminder: "${i.title}" ${
+  //           daysLeft === 0 ? "is today!" : "is tomorrow"
+  //         }`,
+  //         {
+  //           onClick: () => navigate(`/internship/${i.id}`),
+  //         }
+  //       );
 
-//       await updateDoc(doc(db, "internships", i.id), {
-//         reminderSent: true,
-//       });
-//     }
-//   });
-// }, [internships]);
+  //       await updateDoc(doc(db, "internships", i.id), {
+  //         reminderSent: true,
+  //       });
+  //     }
+  //   });
+  // }, [internships]);
 
-const toJSDate = (value) => {
-  if (!value) return null;
-  if (typeof value.toDate === "function") return value.toDate();
-  return new Date(value);
-}
+  const toJSDate = (value) => {
+    if (!value) return null;
+    if (typeof value.toDate === "function") return value.toDate();
+    return new Date(value);
+  };
 
+  useEffect(() => {
+    if (!internships.length) return;
 
-useEffect(() => {
-  if (!internships.length) return;
+    const today = dayjs().startOf("day");
+    const queue = [];
 
-  const today = dayjs().startOf("day");
-  const queue = [];
+    internships.forEach((i) => {
+      const interviewTs = i.timeline?.interviewDate;
 
-  internships.forEach((i) => {
-    const interviewTs = i.timeline?.interviewDate;
+      if (!interviewTs || i.reminderSent) return;
 
-    if (!interviewTs || i.reminderSent) return;
+      const interviewDate = interviewTs.toDate
+        ? dayjs(interviewTs.toDate()).startOf("day")
+        : dayjs(interviewTs).startOf("day");
 
-    const interviewDate = interviewTs.toDate
-      ? dayjs(interviewTs.toDate()).startOf("day")
-      : dayjs(interviewTs).startOf("day");
+      const daysLeft = interviewDate.diff(today, "day");
 
-    const daysLeft = interviewDate.diff(today, "day");
+      if (daysLeft <= 1 && daysLeft >= 0) {
+        queue.push({
+          id: i.id,
+          title: i.title,
+          daysLeft,
+        });
+      }
+    });
 
-    if (daysLeft <= 1 && daysLeft >= 0) {
-      queue.push({
-        id: i.id,
-        title: i.title,
-        daysLeft,
-      });
+    if (queue.length > 0) {
+      setReminderQueue(queue);
+      setActiveReminder(queue[0]);
     }
-  });
+  }, [internships]);
 
-  if (queue.length > 0) {
-    setReminderQueue(queue);
-    setActiveReminder(queue[0]); 
-  }
-}, [internships]);
+  const handleReminderClose = async () => {
+    if (!activeReminder) return;
 
-const handleReminderClose = async () => {
-  if (!activeReminder) return;
+    // mark reminder sent in Firestore
+    await updateDoc(doc(db, "internships", activeReminder.id), {
+      reminderSent: true,
+    });
 
-  // mark reminder sent in Firestore
-  await updateDoc(doc(db, "internships", activeReminder.id), {
-    reminderSent: true,
-  });
+    const remaining = reminderQueue.slice(1);
 
-  const remaining = reminderQueue.slice(1);
-
-  setReminderQueue(remaining);
-  setActiveReminder(remaining[0] || null);
-};
-
+    setReminderQueue(remaining);
+    setActiveReminder(remaining[0] || null);
+  };
 
   /* ---------- CRUD ---------- */
   const handleAdd = async (e) => {
@@ -225,23 +224,37 @@ const handleReminderClose = async () => {
     setTitle("");
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Delete this internship?")) return;
+const handleDelete = async (id) => {
+  if (!window.confirm("Delete this internship?")) return;
+
+  try {
     await deleteDoc(doc(db, "internships", id));
-  };
+    toast.success("Internship deleted successfully");
+  } catch (err) {
+    toast.error("Failed to delete internship");
+  }
+};
 
   const openEdit = (item) =>
     setEditing({ id: item.id, title: item.title, status: item.status });
 
-  const handleSaveEdit = async () => {
-    if (!editing.title.trim()) return;
+ const handleSaveEdit = async () => {
+  if (!editing.title.trim()) return;
+
+  try {
     await updateDoc(doc(db, "internships", editing.id), {
       title: editing.title.trim(),
       status: editing.status,
-      offerReceived: editing.status === "Accepted" ? true : false,
+      offerReceived: editing.status === "Accepted",
     });
+
+    toast.success("Internship updated successfully");
     setEditing(null);
-  };
+  } catch (err) {
+    toast.error("Failed to update internship");
+  }
+};
+
 
   /* ---------- Resume Upload / Replace ---------- */
   const handleResumeUpload = async (internship) => {
@@ -272,10 +285,10 @@ const handleReminderClose = async () => {
           resumeUrl: data.publicUrl,
         });
 
-        alert("Resume uploaded successfully ✅");
+        toast.success("Resume uploaded successfully");
       } catch (err) {
         console.error(err);
-        alert("Resume upload failed ❌");
+        toast.error("Resume upload failed");
       } finally {
         setUploadingId(null);
       }
@@ -350,15 +363,14 @@ const handleReminderClose = async () => {
   }, [internships, search, statusFilter, sortNewest]);
 
   /* ---------- UI ---------- */
-return (
-
+  return (
     <div className="d-flex mt-3">
-    {/* Sidebar */}
-    <Sidebar user={user} />
+      {/* Sidebar */}
+      <Sidebar user={user} />
 
-    {/* Main content */}
-    <main className="flex-grow-1 p-4">
-      {/* <TopNavbar user={user} /> */}
+      {/* Main content */}
+      <main className="flex-grow-1 p-4">
+        {/* <TopNavbar user={user} /> */}
 
         {/* ===== Primary Action Bar ===== */}
         <div className="glass p-3 mb-4 d-flex align-items-center justify-content-between">
@@ -368,7 +380,7 @@ return (
               All your applications and documents, organized smartly
             </small>
           </div>
-              
+
           <button
             className="resume-btn"
             disabled={!internships.some((i) => i.resumeUrl)}
@@ -697,9 +709,10 @@ return (
                           {/* View */}
                           <button
                             className="btn btn-sm btn-outline-pink"
-                            onClick={() =>
-                              setResumePreview({ resumeUrl: i.resumeUrl })
-                            }
+                            onClick={() => {
+                              setShowResumeManager(false);  
+                              setResumePreview({ resumeUrl: i.resumeUrl });
+                            }}
                           >
                             View
                           </button>
@@ -731,17 +744,18 @@ return (
         </>
       )}
       {/* Centered Modal */}
-     <CenterModal
-  show={!!activeReminder}
-  message={
-    activeReminder
-      ? `⏰ Interview reminder: "${activeReminder.title}" ${
-          activeReminder.daysLeft === 0 ? "is TODAY!" : "is TOMORROW!"
-        }`
-      : ""
-  }
-  onClose={handleReminderClose}
-/>
-</div>
+      <CenterModal
+        show={!!activeReminder}
+        message={
+          activeReminder
+            ? `⏰ Interview reminder: "${activeReminder.title}" ${
+                activeReminder.daysLeft === 0 ? "is TODAY!" : "is TOMORROW!"
+              }`
+            : ""
+        }
+        onClose={handleReminderClose}
+      />
+      <ToastContainer position="top-right" autoClose={2500} />
+    </div>
   );
 }
