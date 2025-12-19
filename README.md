@@ -1,142 +1,212 @@
-# 📌 Internship Tracker Dashboard
+# Internix — Internship Application Tracker
 
-A React + Firebase based Internship Tracker that helps you manage applications, resumes, and deadline/interview reminders with toast notifications.
+**Internix** A modern Internship Management & Tracking Dashboard built with React, Firebase, Supabase, and Chart.js. Designed to help students track applications, upload resumes, view analytics, and receive deadline reminders — all in one place.
+
+The project is inspired by the **structured, detail‑oriented application workflows used by programs like METI / OIST**, where clarity, tracking, and documentation play a critical role in the selection process.
+
+This repository demonstrates **clean frontend architecture, real‑time data handling, and practical problem‑solving** expected in research‑oriented and international internship programs.
 
 ---
 
-## 🚀 Features
+## 📌 Problem Statement
 
-### ✅ Internship Management
+Students applying to multiple internships often face:
 
-* Add, edit, delete internship applications
-* Track status: Applied, Shortlisted, Accepted, Rejected
-* View applications in a searchable & filterable dashboard
+* Scattered resumes and documents
+* Missed deadlines or interview dates
+* No clear overview of application progress
+* Manual tracking using spreadsheets
 
-### 📄 Resume Manager
+**Internix solves this by providing a single, structured dashboard** to track applications, resumes, and deadlines reliably.
 
-* Upload resumes (PDF) using Supabase Storage
-* Replace existing resumes
-* View & download resumes inside a popup modal
+---
+
+## ✨ Key Features
+
+### 1. Internship Application Dashboard
+
+* Add, edit, and delete internship applications
+* Track application status:
+
+  * `Applied`
+  * `Shortlisted`
+  * `Accepted`
+  * `Rejected`
+* Real‑time updates using **Firestore listeners**
+* Status and time‑based analytics using charts
+
+### 2. Resume Management System (Popup‑based)
+
+* Upload **multiple PDF resumes**
+* Each resume is linked to a specific internship
 * Central **Resume Manager modal** (no page navigation)
+* View, download, and replace resumes
+* Files stored securely using **Supabase Storage**
 
-### ⏰ Deadline / Interview Reminders
+### 3. Deadline & Reminder System
 
-* Toast notifications for upcoming deadlines or interviews
-* Automatically triggers when:
+* Store application deadlines / interview dates
+* Automatic **toast reminders** when deadlines are near
+* Prevents duplicate alerts using a `reminderSent` flag
+* Implemented fully on the client side
 
-  * Interview/Deadline is **today or tomorrow**
-  * `reminderSent !== true`
-* Clicking the toast navigates to Internship Details
+> Designed intentionally **without Cloud Functions** to remain compatible with the Firebase free plan
 
-### 📊 Analytics
+### 4. Internship Details (Scalable Design)
 
-* Status-wise bar chart
-* Monthly applications chart (last 6 months)
+* Navigation‑ready Internship Details page
+* Firestore schema supports:
+
+  * Notes
+  * Interview rounds
+  * Documents
+  * Timeline extensions
+
+### 5. Authentication & Data Isolation
+
+* Firebase Email Authentication
+* Each user accesses **only their own applications**
+
+---
+
+## 🧱 System Architecture
+
+```
+React (UI)
+  ↓
+Firebase Authentication
+  ↓
+Firestore (Real‑time database)
+  ↓
+Supabase Storage (PDF resumes)
+```
+
+---
+
+## 🗂 Firestore Data Schema
+
+### Collection: `internships`
+
+```js
+{
+  title: string,
+  status: "Applied" | "Shortlisted" | "Accepted" | "Rejected",
+  createdAt: string,
+  createdBy: string,      // user email
+  resumeUrl: string|null, // Supabase public URL
+  deadline: Timestamp|null,
+  reminderSent: boolean,
+  offerReceived: boolean
+}
+```
+
+This schema is intentionally designed to be **extensible**, supporting future features such as interview timelines and notes.
+
+---
+
+## 🔔 Deadline Reminder Logic (Important)
+
+* Implemented in `Dashboard.js` using `useEffect`
+* Trigger conditions:
+
+  * Deadline exists
+  * Deadline is within **next 3 days**
+  * `reminderSent === false`
+
+When conditions are met:
+
+1. A toast notification is shown
+2. Firestore is updated → `reminderSent: true`
+
+This ensures:
+
+* No repeated alerts
+* Deterministic behavior on refresh
+
+---
+
+## 🧪 How to Test Deadline Reminders
+
+1. In Firestore, set `deadline` as a **Timestamp**
+2. Ensure `reminderSent = false`
+3. Refresh the dashboard
+4. Toast notification appears once
+
+⚠️ Deadlines stored as strings will **not** trigger reminders
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Frontend:** React, React Router
-* **State & UI:** Bootstrap, Chart.js, Lucide Icons
-* **Backend:** Firebase Firestore
-* **Storage:** Supabase Storage (PDF resumes)
-* **Notifications:** react-toastify
-* **Date Handling:** dayjs
+| Layer         | Technology              |
+| ------------- | ----------------------- |
+| Frontend      | React, Bootstrap        |
+| Charts        | Chart.js                |
+| Backend       | Firebase Firestore      |
+| Auth          | Firebase Authentication |
+| File Storage  | Supabase Storage        |
+| Notifications | react-toastify          |
+| Date Handling | dayjs                   |
 
 ---
 
-## 📁 Firestore Schema
+## ⚙️ Installation & Setup
 
-### Collection: `internships`
+```bash
+# Clone repository
+git clone https://github.com/your-username/internix.git
 
-```json
-{
-  "title": "Software Intern",
-  "status": "Applied",
-  "createdAt": "2025-01-10T10:30:00Z",
-  "createdBy": "user@gmail.com",
-  "resumeUrl": "https://...pdf",
-  "interviewDate": Timestamp,
-  "deadline": Timestamp,
-  "reminderSent": false,
-  "offerReceived": false
-}
+# Install dependencies
+npm install
+
+# Run locally
+npm start
 ```
 
 ---
 
-## 🔔 Toast Reminder Logic
+## 🔐 Environment Variables
 
-### When does a toast appear?
+Create a `.env` file:
 
-* `internship.interviewDate` OR `deadline` exists
-* `daysLeft <= 1` and `daysLeft >= 0`
-* `reminderSent !== true`
-
-### Example Toast
-
+```env
+REACT_APP_FIREBASE_API_KEY=...
+REACT_APP_FIREBASE_AUTH_DOMAIN=...
+REACT_APP_FIREBASE_PROJECT_ID=...
+REACT_APP_SUPABASE_URL=...
+REACT_APP_SUPABASE_ANON_KEY=...
 ```
-⏰ Interview reminder: "Summer Intern" is tomorrow
-```
-
-### After showing toast
-
-```js
-await updateDoc(doc(db, "internships", id), {
-  reminderSent: true
-});
-```
-
-➡ prevents duplicate reminders
 
 ---
 
-## 🧪 How to Test Reminder Toasts
+## 🎯 Design Philosophy
 
-1. Open Firebase Console → Firestore
-2. Set `interviewDate` or `deadline` to:
+* Emphasis on **clarity and structure**
+* Deterministic application tracking
+* Transparent data schema
+* Minimal UI distractions
+* Extensible for research‑style workflows
 
-   * **Today** OR **Tomorrow**
-3. Ensure:
-
-   * `reminderSent` = false (or delete field)
-4. Reload Dashboard
-
-✅ Toast should appear once
+This project reflects the type of **organized, detail‑oriented engineering mindset** expected in international research and internship programs.
 
 ---
 
-## ⚠ Common Issues & Fixes
-
-### ❌ Toast not showing?
-
-✔ Ensure `ToastContainer` is added in `App.js`
-
-```jsx
-<ToastContainer position="top-right" />
-```
-
-✔ Ensure reminder logic runs **after internships load**
-
-✔ Ensure Firestore date is a **Timestamp**, not string
-
----
-
-## 💡 Notes
-
-* Firebase **Cloud Functions are NOT required** for client-side reminders
-* Blaze plan is NOT needed
-* Resume uploads work fully on free tier via Supabase
-
----
-
-## 📌 Future Enhancements
+## 🚀 Future Enhancements
 
 * Email reminders (Cloud Functions – optional)
-* Notes & documents per internship
-* Calendar integration
+* Interview timeline visualization
+* Notes & feedback per application
+* Resume version history
+* Exportable application reports
 
 ---
 
-Happy building 🚀
+## 👨‍💻 Author
+
+
+**Tanisha Pandya**
+Engineering Student | Aspiring Software Engineer
+
+---
+
+⭐ If this project helped you understand structured internship tracking, consider starring the repository.
