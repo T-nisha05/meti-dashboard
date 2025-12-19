@@ -1,70 +1,142 @@
-# Getting Started with Create React App
+# 📌 Internship Tracker Dashboard
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A React + Firebase based Internship Tracker that helps you manage applications, resumes, and deadline/interview reminders with toast notifications.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Features
 
-### `npm start`
+### ✅ Internship Management
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+* Add, edit, delete internship applications
+* Track status: Applied, Shortlisted, Accepted, Rejected
+* View applications in a searchable & filterable dashboard
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### 📄 Resume Manager
 
-### `npm test`
+* Upload resumes (PDF) using Supabase Storage
+* Replace existing resumes
+* View & download resumes inside a popup modal
+* Central **Resume Manager modal** (no page navigation)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### ⏰ Deadline / Interview Reminders
 
-### `npm run build`
+* Toast notifications for upcoming deadlines or interviews
+* Automatically triggers when:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+  * Interview/Deadline is **today or tomorrow**
+  * `reminderSent !== true`
+* Clicking the toast navigates to Internship Details
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### 📊 Analytics
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+* Status-wise bar chart
+* Monthly applications chart (last 6 months)
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🛠 Tech Stack
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+* **Frontend:** React, React Router
+* **State & UI:** Bootstrap, Chart.js, Lucide Icons
+* **Backend:** Firebase Firestore
+* **Storage:** Supabase Storage (PDF resumes)
+* **Notifications:** react-toastify
+* **Date Handling:** dayjs
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 📁 Firestore Schema
 
-## Learn More
+### Collection: `internships`
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```json
+{
+  "title": "Software Intern",
+  "status": "Applied",
+  "createdAt": "2025-01-10T10:30:00Z",
+  "createdBy": "user@gmail.com",
+  "resumeUrl": "https://...pdf",
+  "interviewDate": Timestamp,
+  "deadline": Timestamp,
+  "reminderSent": false,
+  "offerReceived": false
+}
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 🔔 Toast Reminder Logic
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### When does a toast appear?
 
-### Analyzing the Bundle Size
+* `internship.interviewDate` OR `deadline` exists
+* `daysLeft <= 1` and `daysLeft >= 0`
+* `reminderSent !== true`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Example Toast
 
-### Making a Progressive Web App
+```
+⏰ Interview reminder: "Summer Intern" is tomorrow
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+### After showing toast
 
-### Advanced Configuration
+```js
+await updateDoc(doc(db, "internships", id), {
+  reminderSent: true
+});
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+➡ prevents duplicate reminders
 
-### Deployment
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 🧪 How to Test Reminder Toasts
 
-### `npm run build` fails to minify
+1. Open Firebase Console → Firestore
+2. Set `interviewDate` or `deadline` to:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+   * **Today** OR **Tomorrow**
+3. Ensure:
+
+   * `reminderSent` = false (or delete field)
+4. Reload Dashboard
+
+✅ Toast should appear once
+
+---
+
+## ⚠ Common Issues & Fixes
+
+### ❌ Toast not showing?
+
+✔ Ensure `ToastContainer` is added in `App.js`
+
+```jsx
+<ToastContainer position="top-right" />
+```
+
+✔ Ensure reminder logic runs **after internships load**
+
+✔ Ensure Firestore date is a **Timestamp**, not string
+
+---
+
+## 💡 Notes
+
+* Firebase **Cloud Functions are NOT required** for client-side reminders
+* Blaze plan is NOT needed
+* Resume uploads work fully on free tier via Supabase
+
+---
+
+## 📌 Future Enhancements
+
+* Email reminders (Cloud Functions – optional)
+* Notes & documents per internship
+* Calendar integration
+
+---
+
+Happy building 🚀
